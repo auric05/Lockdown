@@ -14,7 +14,12 @@ int main(void) {
 
     pcap_if_t *device = alldevs;
     while(device != NULL) {
-        printf("Device Name: %s, Device Description: %s\n", device->name, device->description);
+        printf("Device Name: %s\n", device->name);
+        if (device->description == NULL) {
+            printf("Description not found");
+        } else {
+            printf("Device Description: %s\n", device->description);
+        }
         device = device->next;
     }
 
