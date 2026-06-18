@@ -28,9 +28,19 @@ int main(int argc, char *argv[]) {
         }
         device = device->next;
     }
+    if(found == 1) {
+        pcap_t *handle = pcap_open_live(device->name, 65536, 1, 1000, errbuf);
+        if (handle == NULL) {
+            fprintf(stderr, "Failed to open capture handle: %s\n", errbuf);
+            pcap_freealldevs(alldevs);
+            return 1;
+        }
+        printf("Capture handle opened on: %s\n", argv[1]);
+        pcap_close(handle);
+    }
     if(found == 0) {
         printf("Interface not found");
-        }
-        pcap_freealldevs(alldevs);
-        return 0;
+    }
+    pcap_freealldevs(alldevs);
+    return 0;
 }
