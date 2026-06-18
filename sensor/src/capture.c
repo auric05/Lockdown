@@ -12,9 +12,13 @@ int main(void) {
         return 1;
     }
 
-    printf("Devices found successfully\n");
+    pcap_if_t *device = alldevs;
+    while(device != NULL) {
+        printf("Device Name: %s, Device Description: %s\n", device->name, device->description);
+        device = device->next;
+    }
 
-    printf("%s\n", pcap_lib_version());
     pcap_freealldevs(alldevs);
+
     return 0;
 }
