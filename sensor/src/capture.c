@@ -1,8 +1,14 @@
 #include <stdio.h>
 #include <pcap.h>
+#include <string.h>
 #include "protocols.h"
 
-int main(void) {
+int main(int argc, char *argv[]) {
+
+    if (argc != 2) {
+        printf("Usage: ./capture <interface description>\n");
+        return 1;
+    }
 
     pcap_if_t *alldevs;
     char errbuf[PCAP_ERRBUF_SIZE];
@@ -13,17 +19,18 @@ int main(void) {
     }
 
     pcap_if_t *device = alldevs;
+    int found = 0;
     while(device != NULL) {
-        printf("Device Name: %s\n", device->name);
-        if (device->description == NULL) {
-            printf("Description not found");
-        } else {
-            printf("Device Description: %s\n", device->description);
+        if(device->description != NULL && strcmp(device->description, argv[1]) == 0) {
+            printf("Found interface: %s\n", device->name);
+            found = 1;
+            break;
         }
         device = device->next;
     }
-
-    pcap_freealldevs(alldevs);
-
-    return 0;
+    if(found == 0) {
+        printf("Interface not found");
+        }
+        pcap_freealldevs(alldevs);
+        return 0;
 }
