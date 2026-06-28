@@ -76,7 +76,10 @@ int main(int argc, char *argv[]) {
                 printf("IPv4 packet\n");
                 printf("  src: %s\n", inet_ntoa(src_addr));
                 printf("  dst: %s\n", inet_ntoa(dest_addr));
-                printf("  protocol: %d\n", ip->protocol);
+                if(ip->protocol == 6) printf("  protocol: TCP\n");
+                else if(ip->protocol == 17) printf("  protocol: UDP\n");
+                else if(ip->protocol == 1) printf("  protocol: ICMP\n");
+                else printf("  protocol: %d\n", ip->protocol);
                 printf("  TTL: %d\n", ip->ttl);
             } else if(type == 0x0806) {
                 printf("ARP packet\n");
