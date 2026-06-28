@@ -65,17 +65,25 @@ int main(int argc, char *argv[]) {
             printf("Packet captured | length: %d bytes\n", header->len);
             //cast raw packet bytes to ether_header struct, tells the compiler to interpret these bytes as an Ethernet frame
             struct ether_header *eth = (struct ether_header *)packet; 
+            //ntohs converts big endian bytes to your CPU's byte order which is little endian, and then stored in type as uint16_t
             uint16_t type = ntohs(eth->ether_type);
             //printing via checking packet types IPv4, ARP, Unknown
             if(type == 0x0800) {
+                //skip past the 14-byte Ethernet header (0-13) using pointer arithmetic, cast remaining bytes as ip_header struct starting
+                //at byte 14
                 struct ip_header *ip = (struct ip_header *)(packet + sizeof(struct ether_header));
+                //struct in_addr is a wrapper that inet_ntoa() requires to convert a raw uint32_t IP address into a human readable
+                //string like 192.168.1.1
                 struct in_addr src_addr;
                 struct in_addr dest_addr;
+                //copy raw IP bytes from ip_header into the in_addr wrapper
                 src_addr.s_addr = ip->src_ip;
                 dest_addr.s_addr = ip->dest_ip;
                 printf("IPv4 packet\n");
+                //inet_ntoa converts the wrapped uint32_t into a dotted decimal string
                 printf("  src: %s\n", inet_ntoa(src_addr));
                 printf("  dst: %s\n", inet_ntoa(dest_addr));
+                //protocol field: 6 = TCP, 17 = UDP, 1 = ICMP, raw numbers from IP header made readble
                 if(ip->protocol == 6) printf("  protocol: TCP\n");
                 else if(ip->protocol == 17) printf("  protocol: UDP\n");
                 else if(ip->protocol == 1) printf("  protocol: ICMP\n");
