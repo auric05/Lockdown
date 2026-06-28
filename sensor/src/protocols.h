@@ -22,4 +22,11 @@ struct ip_header {
     uint32_t dest_ip;
 } __attribute__((packed));
 
+struct udp_header {
+    uint16_t src_port;
+    uint16_t dest_port;
+    uint16_t length;
+    uint16_t checksum;
+} __attribute__((packed));
+
 #endif
