@@ -85,7 +85,14 @@ int main(int argc, char *argv[]) {
                 printf("  dst: %s\n", inet_ntoa(dest_addr));
                 //protocol field: 6 = TCP, 17 = UDP, 1 = ICMP, raw numbers from IP header made readble
                 if(ip->protocol == 6) printf("  protocol: TCP\n");
-                else if(ip->protocol == 17) printf("  protocol: UDP\n");
+                else if(ip->protocol == 17) {
+                    printf("  protocol: UDP\n");
+                    int ip_header_len = (ip->vhl & 0x0F) * 4;
+                    struct udp_header *udp = (struct udp_header *)(packet + sizeof(struct ether_header) + ip_header_len);
+                    printf("  src port: %d\n", ntohs(udp->src_port));
+                    printf("  dst port: %d\n", ntohs(udp->dest_port));
+                }
+                
                 else if(ip->protocol == 1) printf("  protocol: ICMP\n");
                 else printf("  protocol: %d\n", ip->protocol);
                 printf("  TTL: %d\n", ip->ttl);
