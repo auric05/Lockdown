@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <pcap.h>
 #include <string.h>
+#include <winsock2.h>
 #include "protocols.h"
 
 //argc = argument count, argv = argument strings. argv[0] = program name, argv[1] = interface description
@@ -67,7 +68,16 @@ int main(int argc, char *argv[]) {
             uint16_t type = ntohs(eth->ether_type);
             //printing via checking packet types IPv4, ARP, Unknown
             if(type == 0x0800) {
+                struct ip_header *ip = (struct ip_header *)(packet + sizeof(struct ether_header));
+                struct in_addr src_addr;
+                struct in_addr dest_addr;
+                src_addr.s_addr = ip->src_ip;
+                dest_addr.s_addr = ip->dest_ip;
                 printf("IPv4 packet\n");
+                printf("  src: %s\n", inet_ntoa(src_addr));
+                printf("  dst: %s\n", inet_ntoa(dest_addr));
+                printf("  protocol: %d\n", ip->protocol);
+                printf("  TTL: %d\n", ip->ttl);
             } else if(type == 0x0806) {
                 printf("ARP packet\n");
             } else {
