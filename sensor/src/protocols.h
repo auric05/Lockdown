@@ -29,4 +29,16 @@ struct udp_header {
     uint16_t checksum;
 } __attribute__((packed));
 
+struct tcp_header {
+    uint16_t src_port;
+    uint16_t dest_port;
+    uint32_t sequence_number;
+    uint32_t ack_number;
+    uint8_t data_offset;
+    uint8_t flags;
+    uint16_t window_size;
+    uint16_t checksum;
+    uint16_t urgent_pointer;
+} __attribute__((packed));
+
 #endif

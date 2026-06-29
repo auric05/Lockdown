@@ -84,15 +84,34 @@ int main(int argc, char *argv[]) {
                 printf("  src: %s\n", inet_ntoa(src_addr));
                 printf("  dst: %s\n", inet_ntoa(dest_addr));
                 //protocol field: 6 = TCP, 17 = UDP, 1 = ICMP, raw numbers from IP header made readble
-                if(ip->protocol == 6) printf("  protocol: TCP\n");
+                if(ip->protocol == 6) {
+                    printf("  protocol: TCP\n");
+                    //masking lower 4 bits of vhl to get header length in 32 bit words, multiply by 4 to convert to bytes
+                    int ip_header_len = (ip->vhl & 0x0F) * 4;
+                    //calculating where tcp_header sits within the total bytes
+                    struct tcp_header *tcp = (struct tcp_header *)(packet + sizeof(struct ether_header) + ip_header_len);
+                    //print src/dst ports & flags
+                    printf("  src port: %d\n", ntohs(tcp->src_port));
+                    printf("  dst port: %d\n", ntohs(tcp->dest_port));
+                    printf("  flags: 0x%02x -", tcp->flags);
+                    //ANDing with bitwise to print correct flag type
+                    if(tcp->flags & 0x02) printf(" SYN");
+                    if(tcp->flags & 0x10) printf(" ACK");
+                    if(tcp->flags & 0x01) printf(" FIN");
+                    if(tcp->flags & 0x04) printf(" RST");
+                    if(tcp->flags & 0x08) printf(" PSH");
+                    printf("\n");
+                } 
                 else if(ip->protocol == 17) {
                     printf("  protocol: UDP\n");
+                    //masking lower 4 bits of vhl to get header length in 32 bit words, multiply by 4 to convert to bytes
                     int ip_header_len = (ip->vhl & 0x0F) * 4;
+                    //calculating where udp_header sits within the total bytes
                     struct udp_header *udp = (struct udp_header *)(packet + sizeof(struct ether_header) + ip_header_len);
+                    //print src/dst ports
                     printf("  src port: %d\n", ntohs(udp->src_port));
                     printf("  dst port: %d\n", ntohs(udp->dest_port));
                 }
-                
                 else if(ip->protocol == 1) printf("  protocol: ICMP\n");
                 else printf("  protocol: %d\n", ip->protocol);
                 printf("  TTL: %d\n", ip->ttl);
