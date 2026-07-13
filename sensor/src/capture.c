@@ -6,7 +6,6 @@
 
 void process_packet(const struct pcap_pkthdr *header, const u_char *packet)
 {
-    printf("Packet captured | length: %d bytes\n", header->len);
     // cast raw packet bytes to ether_header struct, tells the compiler to interpret these bytes as an Ethernet frame
     struct ether_header *eth = (struct ether_header *)packet;
     // ntohs converts big endian bytes to your CPU's byte order which is little endian, and then stored in type as uint16_t
@@ -24,51 +23,32 @@ void process_packet(const struct pcap_pkthdr *header, const u_char *packet)
         // copy raw IP bytes from ip_header into the in_addr wrapper
         src_addr.s_addr = ip->src_ip;
         dest_addr.s_addr = ip->dest_ip;
-        printf("IPv4 packet\n");
-        // inet_ntoa converts the wrapped uint32_t into a dotted decimal string
-        printf("  src: %s\n", inet_ntoa(src_addr));
-        printf("  dst: %s\n", inet_ntoa(dest_addr));
+        char src_str[16];
+        strncpy(src_str, inet_ntoa(src_addr), 15);
+        src_str[15] = '\0';
         // protocol field: 6 = TCP, 17 = UDP, 1 = ICMP, raw numbers from IP header made readble
         if (ip->protocol == 6)
         {
-            printf("  protocol: TCP\n");
             // masking lower 4 bits of vhl to get header length in 32 bit words, multiply by 4 to convert to bytes
             int ip_header_len = (ip->vhl & 0x0F) * 4;
             // calculating where tcp_header sits within the total bytes
             struct tcp_header *tcp = (struct tcp_header *)(packet + sizeof(struct ether_header) + ip_header_len);
-            // print src/dst ports & flags
-            printf("  src port: %d\n", ntohs(tcp->src_port));
-            printf("  dst port: %d\n", ntohs(tcp->dest_port));
-            printf("  flags: 0x%02x -", tcp->flags);
-            // ANDing with bitwise to print correct flag type
-            if (tcp->flags & 0x02)
-                printf(" SYN");
-            if (tcp->flags & 0x10)
-                printf(" ACK");
-            if (tcp->flags & 0x01)
-                printf(" FIN");
-            if (tcp->flags & 0x04)
-                printf(" RST");
-            if (tcp->flags & 0x08)
-                printf(" PSH");
-            printf("\n");
+            printf("{\"protocol\": \"TCP\", \"src_ip\": \"%s\", \"dst_ip\": \"%s\", \"src_port\": %d, \"dst_port\": %d, \"ttl\": %d, \"length\": %d, \"flags\": \"0x%02x\"}\n", 
+            src_str, inet_ntoa(dest_addr), ntohs(tcp->src_port), ntohs(tcp->dest_port), ip->ttl, header->len, tcp->flags);
         }
         else if (ip->protocol == 17)
         {
-            printf("  protocol: UDP\n");
             // masking lower 4 bits of vhl to get header length in 32 bit words, multiply by 4 to convert to bytes
             int ip_header_len = (ip->vhl & 0x0F) * 4;
             // calculating where udp_header sits within the total bytes
             struct udp_header *udp = (struct udp_header *)(packet + sizeof(struct ether_header) + ip_header_len);
-            // print src/dst ports
-            printf("  src port: %d\n", ntohs(udp->src_port));
-            printf("  dst port: %d\n", ntohs(udp->dest_port));
+            printf("{\"protocol\": \"UDP\", \"src_ip\": \"%s\", \"dst_ip\": \"%s\", \"src_port\": %d, \"dst_port\": %d, \"ttl\": %d, \"length\": %d}\n", src_str, 
+            inet_ntoa(dest_addr), ntohs(udp->src_port), ntohs(udp->dest_port), ip->ttl, header->len);
         }
-        else if (ip->protocol == 1)
-            printf("  protocol: ICMP\n");
-        else
-            printf("  protocol: %d\n", ip->protocol);
-        printf("  TTL: %d\n", ip->ttl);
+        else if (ip->protocol == 1) {
+            printf("{\"protocol\": \"ICMP\", \"src_ip\": \"%s\", \"dst_ip\": \"%s\", \"ttl\": %d, \"length\": %d}\n", src_str, inet_ntoa(dest_addr), ip->ttl, 
+            header->len);
+        }
     }
     else if (type == 0x0806)
     {
